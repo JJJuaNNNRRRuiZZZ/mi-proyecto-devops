@@ -3,7 +3,7 @@ name: Mi Pipeline DevOps
 on: [push]
 
 jobs:
-  construir-y-subir:
+  construir-y-desplegar:
     runs-on: ubuntu-latest
     steps:
     - name: Descargar codigo
@@ -20,3 +20,15 @@ jobs:
 
     - name: Subir la imagen a Docker Hub
       run: docker push juan25ruiz/mi-proyecto-devops:latest
+
+    - name: Desplegar en Google Cloud (CD)
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.GCP_VM_IP }}
+        username: ${{ secrets.GCP_USERNAME }}
+        key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+        script: |
+          sudo docker pull juan25ruiz/mi-proyecto-devops:latest
+          sudo docker stop mi-web || true
+          sudo docker rm mi-web || true
+          sudo docker run -d --name mi-web -p 80:3000 juan25ruiz/mi-proyecto-devops:latest
